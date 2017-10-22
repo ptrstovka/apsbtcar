@@ -1,0 +1,105 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0099cc"
+    android:animateLayoutChanges="true"
+    android:padding="8dp"
+    tools:context="com.peterstovka.apsbtcar.ControllerActivity">
+
+    <LinearLayout
+        android:id="@+id/controlContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:visibility="visible"
+        >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            >
+
+            <android.support.v7.widget.AppCompatButton
+                android:id="@+id/headlightsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Headlights"
+                />
+
+            <android.support.v7.widget.AppCompatButton
+                android:id="@+id/longDistanceHeadlightsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="LD Headlights"
+                />
+
+        </LinearLayout>
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/hornButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Horn"
+            android:textColor="@android:color/white"
+            android:background="@color/colorPrimary"
+            android:layout_marginRight="8dp"
+            android:layout_marginEnd="8dp"
+            />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/blinkButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Warn"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        >
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/connectButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/joyStickContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        android:layout_gravity="bottom"
+        android:visibility="gone"
+        >
+
+        <com.erz.joysticklibrary.JoyStick
+            android:id="@+id/leftJoyStick"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            />
+
+        <com.erz.joysticklibrary.JoyStick
+            android:id="@+id/rightJoyStick"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            />
+
+    </LinearLayout>
+
+</FrameLayout>

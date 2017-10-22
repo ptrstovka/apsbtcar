@@ -3,4 +3,10 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+    <color name="black_overlay">#66000000</color>
+
+
+    <color name="button_red">@android:color/holo_red_dark</color>
+    <color name="button_green">@android:color/holo_green_dark</color>
 </resources>
