@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">APS BT CAR</string>
+
+    <string name="title_activity_controller">Controller</string>
+    <string name="title_activity_discovery">Device Discovery</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>
