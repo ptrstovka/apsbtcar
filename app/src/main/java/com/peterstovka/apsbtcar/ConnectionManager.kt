@@ -219,7 +219,7 @@ class ConnectionManager(
             fun cancel() {
                 try {
                     socket.close()
-                    callback.forEach { it.onConnected() }
+                    callback.forEach { it.onDisconnected() }
                 } catch (e: IOException) {
                     Log.e(TAG, "Could not close the socket.", e)
                 }
@@ -234,12 +234,13 @@ class ConnectionManager(
         var timer: Timer? = null
 
         override fun run() {
+//            Log.d("timer", "Written beep")
             connectionService.write("beep".toByteArray())
         }
 
         fun startService() {
             timer = Timer("heart")
-            timer?.scheduleAtFixedRate(this, 0, 500)
+            timer?.scheduleAtFixedRate(this, 1000, 1000)
         }
 
         fun stopService() {

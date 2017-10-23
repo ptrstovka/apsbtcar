@@ -1,7 +1,5 @@
 package com.peterstovka.apsbtcar
 
-import android.bluetooth.BluetoothDevice
-
 /**
  * @author [Peter Stovka](mailto:stovka.peter@gmail.com)
  */
@@ -31,6 +29,18 @@ interface ControllerContract {
 
         fun showWarningLightsOff()
 
+        fun sendCommand(command: String)
+
+        fun disconnect()
+
+        fun setLeftBlinkOn()
+
+        fun setLeftBlinkOff()
+
+        fun setRightBlinkOn()
+
+        fun setRightBlinkOff()
+
     }
 
     interface Presenter {
@@ -49,6 +59,10 @@ interface ControllerContract {
 
         }
 
+        fun toggleLeftBlink()
+
+        fun toggleRightBlink()
+
         fun bind(view: View)
 
         fun unbind()
@@ -59,15 +73,19 @@ interface ControllerContract {
 
         fun onConnectionToggle()
 
-        fun connect(device: BluetoothDevice)
-
         fun toggleHeadlights()
 
         fun toggleLongDistanceHeadlights()
 
         fun toggleWarningLights()
 
-        fun horn()
+        fun hornOn()
+
+        fun hornOff()
+
+        fun setConnected()
+
+        fun setDisconnected()
 
     }
 

@@ -1,11 +1,5 @@
 package com.peterstovka.apsbtcar
 
-import android.bluetooth.BluetoothDevice
-import android.os.Handler
-import android.util.Log
-import com.peterstovka.apsbtcar.ConnectionManager.ConnectionService.Companion.MESSAGE_READ
-import com.peterstovka.apsbtcar.ConnectionManager.ConnectionService.Companion.MESSAGE_WRITE_FAILED
-import com.peterstovka.apsbtcar.ConnectionManager.ConnectionService.Companion.MESSAGE_WRITE_OK
 import com.peterstovka.apsbtcar.ControllerContract.Presenter.Companion.DIR_CENTER
 import com.peterstovka.apsbtcar.ControllerContract.Presenter.Companion.DIR_DOWN
 import com.peterstovka.apsbtcar.ControllerContract.Presenter.Companion.DIR_LEFT
@@ -15,81 +9,23 @@ import com.peterstovka.apsbtcar.ControllerContract.Presenter.Companion.DIR_RIGHT
 import com.peterstovka.apsbtcar.ControllerContract.Presenter.Companion.DIR_RIGHT_DOWN
 import com.peterstovka.apsbtcar.ControllerContract.Presenter.Companion.DIR_RIGHT_UP
 import com.peterstovka.apsbtcar.ControllerContract.Presenter.Companion.DIR_UP
+import java.util.*
 
 /**
  * @author [Peter Stovka](mailto:stovka.peter@gmail.com)
  */
 class ControllerPresenter: ControllerContract.Presenter {
 
-    val TAG = "ControllerPresenter"
-
     private var view: ControllerContract.View? = null
-
-    private var receivedString = ""
-
-    private val handler = Handler { message ->
-        when (message.what) {
-
-            MESSAGE_READ -> {
-//                val msg = String((message.obj as ByteArray), 0, message.arg1)
-//                receivedString += msg
-
-//                val startIndex = msg.indexOf("#")
-//                val endIndex = msg.indexOf('~')
-//
-////                Log.d("GOT", "Start: $startIndex End: $endIndex")
-//
-//                if (startIndex >= 0 && endIndex > 0 && startIndex < endIndex) {
-//                    val received = receivedString.substring(startIndex, endIndex)
-//                    Log.d("READ", received)
-//                    receivedString.removeRange(startIndex, endIndex)
-//                }
-
-                true
-            }
-
-            MESSAGE_WRITE_OK -> {
-
-                true
-            }
-
-            MESSAGE_WRITE_FAILED -> {
-
-
-                true
-            }
-
-            else -> false
-        }
-    }
 
     private var headlightsOn = false
     private var longDistanceHeadlightsOn = false
-
     private var warningLightsOn = false
-
-    private val connectionManager =  ConnectionManager(handler, object: ConnectionManager.Callback {
-        override fun onConnected() {
-            reset()
-            view?.showButtonConnected()
-            view?.showControls()
-        }
-
-        override fun onDisconnected() {
-            view?.showButtonDisconnected()
-            view?.hideControls()
-            reset()
-        }
-    })
-
-    override fun connect(device: BluetoothDevice) {
-        connectionManager.connect(device)
-    }
 
     override fun bind(view: ControllerContract.View) {
         this.view = view
 
-        if (connectionManager.isConnected()) {
+        if (isConnected) {
             view.showButtonConnected()
             view.showControls()
         } else {
@@ -125,78 +61,81 @@ class ControllerPresenter: ControllerContract.Presenter {
     }
 
     private fun goForward(power: Double) {
-        if (!connectionManager.isConnected()) {
+        if (!isConnected) {
             return
         }
 
-        connectionManager.write("F")
-//        Log.d(TAG, "FORWARD: " + power)
+        view?.sendCommand("fwd_${power.toInt()}")
     }
 
     private fun goBackward(power: Double) {
-        if (!connectionManager.isConnected()) {
+        if (!isConnected) {
             return
         }
 
-        connectionManager.write("B")
-//        Log.d(TAG, "BACKWARD: " + power)
+        view?.sendCommand("bwd_${power.toInt()}")
     }
 
     private fun stop() {
-        if (!connectionManager.isConnected()) {
+        if (!isConnected) {
             return
         }
 
-        connectionManager.write("S")
-//        Log.d(TAG, "STOP ACCELERATE")
+        view?.sendCommand("stop")
     }
 
     private fun turnRight(power: Double) {
-        if (!connectionManager.isConnected()) {
+        if (!isConnected) {
             return
         }
 
-        Log.d(TAG, "RIGHT: " + power)
+        view?.sendCommand("rht_${power.toInt()}")
     }
 
     private fun turnLeft(power: Double) {
-        if (!connectionManager.isConnected()) {
+        if (!isConnected) {
             return
         }
 
-        Log.d(TAG, "LEFT: " + power)
+        view?.sendCommand("lft_${power.toInt()}")
     }
 
     private fun center() {
-        if (!connectionManager.isConnected()) {
+        if (!isConnected) {
             return
         }
 
-        Log.d(TAG, "CENTER")
+        view?.sendCommand("ctr")
     }
 
     override fun toggleHeadlights() {
-        if (!connectionManager.isConnected()) {
+        if (!isConnected) {
             return
         }
 
         headlightsOn = !headlightsOn
         render()
 
-        // TODO: here send headlights
-        Log.d(TAG, "Headlights " + headlightsOn)
+        if (headlightsOn) {
+            view?.sendCommand("h1")
+        } else {
+            view?.sendCommand("h0")
+        }
     }
 
     override fun toggleLongDistanceHeadlights() {
-        if (!connectionManager.isConnected()) {
+        if (!isConnected) {
             return
         }
 
         longDistanceHeadlightsOn = !longDistanceHeadlightsOn
         render()
 
-        // TODO: Here sent long distance cmd
-        Log.d(TAG, "Long distance " + longDistanceHeadlightsOn)
+        if (longDistanceHeadlightsOn) {
+            view?.sendCommand("ldh1")
+        } else {
+            view?.sendCommand("ldh0")
+        }
     }
 
     private fun render() {
@@ -217,42 +156,160 @@ class ControllerPresenter: ControllerContract.Presenter {
         } else {
             view?.showWarningLightsOff()
         }
+
+        if (leftBlinkEnabled) {
+            view?.setLeftBlinkOn()
+        } else {
+            view?.setLeftBlinkOff()
+        }
+
+        if (rightBlinkEnabled) {
+            view?.setRightBlinkOn()
+        } else {
+            view?.setRightBlinkOff()
+        }
     }
 
     private fun reset() {
         longDistanceHeadlightsOn = false
         headlightsOn = false
         warningLightsOn = false
+        leftBlinkEnabled = false
+        rightBlinkEnabled = false
         render()
     }
 
     override fun toggleWarningLights() {
-        if (!connectionManager.isConnected()) {
+        if (!isConnected) {
+            return
+        }
+
+        if (leftBlinkEnabled || rightBlinkEnabled) {
             return
         }
 
         warningLightsOn = !warningLightsOn
         render()
 
-        // TODO: here send warning lights
-
-        Log.d(TAG, "warning " + warningLightsOn)
+        if (warningLightsOn) {
+            view?.sendCommand("warn1")
+        } else {
+            view?.sendCommand("warn0")
+        }
     }
 
-    override fun horn() {
-        if (!connectionManager.isConnected()) {
+    override fun hornOn() {
+        if (!isConnected) {
             return
         }
 
-        // TODO: Here send horn command.
-        Log.d(TAG, "HORN")
+        view?.sendCommand("horn1")
+    }
+
+    override fun hornOff() {
+        if (!isConnected) {
+            return
+        }
+
+        view?.sendCommand("horn0")
+    }
+
+    private var leftBlinkEnabled = false
+    private var rightBlinkEnabled = false
+
+    override fun toggleLeftBlink() {
+        if (!isConnected) {
+            return
+        }
+
+        if (warningLightsOn) {
+            return
+        }
+
+        leftBlinkEnabled = !leftBlinkEnabled
+        rightBlinkEnabled = false
+        render()
+
+        if (leftBlinkEnabled) {
+            view?.sendCommand("lbl1")
+        } else {
+            view?.sendCommand("lbl0")
+        }
+    }
+
+    override fun toggleRightBlink() {
+        if (!isConnected) {
+           return
+        }
+
+        if (warningLightsOn) {
+            return
+        }
+
+        rightBlinkEnabled = !rightBlinkEnabled
+        leftBlinkEnabled = false
+        render()
+
+        if (rightBlinkEnabled) {
+            view?.sendCommand("rbl1")
+        } else {
+            view?.sendCommand("rbl0")
+        }
     }
 
     override fun onConnectionToggle() {
-        if (!connectionManager.isConnected()) {
+        if (!isConnected) {
             view?.checkForBluetooth()
         } else {
-            connectionManager.close()
+            view?.disconnect()
         }
     }
+
+    private var isConnected = false
+
+    private var keepAlive: KeepAlive? = null
+
+    override fun setConnected() {
+        isConnected = true
+        reset()
+        view?.showButtonConnected()
+        view?.showControls()
+        keepAlive = KeepAlive()
+        keepAlive?.startTimer()
+    }
+
+    override fun setDisconnected() {
+        isConnected = false
+        view?.showButtonDisconnected()
+        view?.hideControls()
+        reset()
+        keepAlive?.stopTimer()
+        keepAlive = null
+    }
+
+    inner class KeepAlive: TimerTask() {
+
+        private var timer: Timer? = null
+
+        fun startTimer() {
+            stopTimer()
+
+            timer = Timer("Heart")
+            timer?.scheduleAtFixedRate(this, 50, 50)
+        }
+
+        fun stopTimer() {
+            if (timer != null) {
+                timer?.cancel()
+                timer = null
+            }
+        }
+
+        override fun run() {
+            if (isConnected) {
+                view?.sendCommand("~")
+            }
+        }
+    }
+
 }
