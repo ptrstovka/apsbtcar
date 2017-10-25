@@ -17,7 +17,7 @@
             android:name=".ControllerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_controller"
-            android:screenOrientation="landscape"
+            android:screenOrientation="reverseLandscape"
             android:theme="@style/FullscreenTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,7 +27,7 @@
         </activity>
         <activity
             android:name=".DiscoveryActivity"
-            android:screenOrientation="landscape"
+            android:screenOrientation="reverseLandscape"
             android:label="@string/title_activity_discovery"
             />
     </application>

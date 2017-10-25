@@ -1,10 +1,13 @@
 package com.peterstovka.apsbtcar
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.AppCompatButton
@@ -13,6 +16,7 @@ import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
+import com.erz.joysticklibrary.JoyStick
 import com.erz.joysticklibrary.JoyStick.*
 import com.peterstovka.apsbtcar.ControllerContract.Presenter.Companion.DIR_CENTER
 import com.peterstovka.apsbtcar.ControllerContract.Presenter.Companion.DIR_DOWN
@@ -46,33 +50,76 @@ class ControllerActivity : AppCompatActivity(), ControllerContract.View {
         super.onStop()
     }
 
+    lateinit var bt: Bluetooth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_controller)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        leftJoyStick.setListener { power, direction ->
-            presenter.onLeftJoyStick(power, getDirection(direction))
+        leftJoyStick.setListener(object: JoyStickListener {
+
+            override fun onTap() {}
+
+            override fun onDoubleTap() {
+                presenter.toggleLeftBlink()
+            }
+
+            override fun onMove(joyStick: JoyStick?, angle: Double, power: Double, direction: Int) {
+                presenter.onLeftJoyStick(power, getDirection(direction))
+            }
+        })
+
+        rightJoyStick.setListener(object: JoyStickListener {
+
+            override fun onTap() {}
+
+            override fun onDoubleTap() {
+                presenter.toggleRightBlink()
+            }
+
+            override fun onMove(joyStick: JoyStick?, angle: Double, power: Double, direction: Int) {
+                presenter.onRightJoyStick(power, getDirection(direction))
+            }
+        })
+
+        connectButton.setOnClickListener {
+            presenter.onConnectionToggle()
         }
 
-        rightJoyStick.setListener { power, direction ->
-            presenter.onRightJoyStick(power, getDirection(direction))
+        headlightsButton.setOnClickListener {
+            presenter.toggleHeadlights()
         }
 
-        connectButton.setOnClickListener { presenter.onConnectionToggle() }
+        longDistanceHeadlightsButton.setOnClickListener {
+            presenter.toggleLongDistanceHeadlights()
+        }
 
-        headlightsButton.setOnClickListener { presenter.toggleHeadlights() }
-        longDistanceHeadlightsButton.setOnClickListener { presenter.toggleLongDistanceHeadlights() }
-        blinkButton.setOnClickListener { presenter.toggleWarningLights() }
+        blinkButton.setOnClickListener {
+            presenter.toggleWarningLights()
+        }
+
+        leftBlinkButton.setOnClickListener {
+            presenter.toggleLeftBlink()
+        }
+
+        rightBlinkButton.setOnClickListener {
+            presenter.toggleRightBlink()
+        }
 
         hornButton.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-                presenter.horn()
+                presenter.hornOn()
+                return@setOnTouchListener true
+            } else if (event.action == MotionEvent.ACTION_UP) {
+                presenter.hornOff()
                 return@setOnTouchListener true
             }
 
             false
         }
+
+        bt = Bluetooth(this, mHandler)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -148,9 +195,48 @@ class ControllerActivity : AppCompatActivity(), ControllerContract.View {
                 log("UUID: " + it.uuid.toString())
             }
 
-            presenter.connect(device)
+//            presenter.connect(device)
+            connect(device)
         }
 
+    }
+
+    private val mHandler = @SuppressLint("HandlerLeak")
+    object : Handler() {
+        override fun handleMessage(msg: Message) {
+            when (msg.what) {
+                Bluetooth.MESSAGE_STATE_CHANGE -> {
+                    Log.d("READ", "MESSAGE_STATE_CHANGE: " + msg.arg1)
+
+                    if (msg.arg1 == Bluetooth.STATE_CONNECTED) {
+                        presenter.setConnected()
+                    } else {
+                        presenter.setDisconnected()
+                    }
+
+                }
+//                Bluetooth.MESSAGE_WRITE -> Log.d("READ", "MESSAGE_WRITE ")
+                Bluetooth.MESSAGE_READ -> Log.d("READ", "MESSAGE_READ ")
+                Bluetooth.MESSAGE_DEVICE_NAME -> Log.d("READ", "MESSAGE_DEVICE_NAME " + msg)
+                Bluetooth.MESSAGE_TOAST -> Log.d("READ", "MESSAGE_TOAST " + msg)
+            }
+        }
+    }
+
+    override fun sendCommand(command: String) {
+        if (command != "~") {
+            Log.d(TAG, "CMD: '$command'")
+        }
+
+        bt.sendMessage(command)
+    }
+
+    override fun disconnect() {
+        bt.stop()
+    }
+
+    private fun connect(device: BluetoothDevice) {
+        bt.connectDevice(device)
     }
 
     private fun searchForAvailableDevices() {
@@ -212,5 +298,21 @@ class ControllerActivity : AppCompatActivity(), ControllerContract.View {
 
     override fun showWarningLightsOff() {
         setRed(blinkButton)
+    }
+
+    override fun setLeftBlinkOn() {
+        setGreen(leftBlinkButton)
+    }
+
+    override fun setLeftBlinkOff() {
+        setRed(leftBlinkButton)
+    }
+
+    override fun setRightBlinkOn() {
+        setGreen(rightBlinkButton)
+    }
+
+    override fun setRightBlinkOff() {
+        setRed(rightBlinkButton)
     }
 }
