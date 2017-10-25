@@ -89,6 +89,10 @@ class ControllerPresenter: ControllerContract.Presenter {
             return
         }
 
+        if (power > 50 && !rightBlinkEnabled) {
+            toggleRightBlink()
+        }
+
         view?.sendCommand("rht_${power.toInt()}")
     }
 
@@ -97,12 +101,24 @@ class ControllerPresenter: ControllerContract.Presenter {
             return
         }
 
+        if (power > 50 && !leftBlinkEnabled) {
+            toggleLeftBlink()
+        }
+
         view?.sendCommand("lft_${power.toInt()}")
     }
 
     private fun center() {
         if (!isConnected) {
             return
+        }
+
+        if (leftBlinkEnabled) {
+            toggleLeftBlink()
+        }
+
+        if (rightBlinkEnabled) {
+            toggleRightBlink()
         }
 
         view?.sendCommand("ctr")
